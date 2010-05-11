@@ -1,0 +1,25 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: projeto3 - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\Felipe\CONFIG~1\Temp\RSP1DB.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Debug/projeto3.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\projeto3\projeto3.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\Felipe\CONFIG~1\Temp\RSP1DB.tmp" 
+<h3>Output Window</h3>
+Compiling...
+projeto3.cpp
+
+
+
+<h3>Results</h3>
+projeto3.obj - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
