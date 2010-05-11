@@ -1,0 +1,14 @@
+Aqui estão as versões das várias classes implementadas e que devem ser utilizadas para a implementação do algoritmo de separação de vozes.
+As versões abaixo, são as que contêm o código mais recente e com maiores funcionalidades, eles são o resultado de melhorias contínuas feitas nas versões anteriores.
+
+Tools:
+	1) WaveParserv9
+	2) FFTv7
+	3) Corrv5
+	4) Convv2
+	5) Matrixv5
+
+BSS:
+	1) CrossCorrelationv5
+	2) AutoCorrelationv4
+	3) NaturalGradientv5
