@@ -5,7 +5,9 @@
 2) Mudar os diretórios: speakersPath, noisesPath, savingPath em cada um dos scripts que serão executados. Por exemplo:
 
   speakersPath = '/Users/zz4fap/Desktop/BSS+ASR/data_base/speech/todos/treino/wav/';
+
   noisesPath = '/Users/zz4fap/Desktop/BSS+ASR/data_base/noises/wav/short/';
+
   savingPath = '/Users/zz4fap/Desktop/BSS+ASR/simulations/EqualizedEnergy/';
 
 OBS.1: O estado de cada um dos scripts é armazenado em num arquivo texto com um dos seguintes nomes: "SimulationsInformationForRecordings_1.txt" até "SimulationsInformationForRecordings_10.txt". Estes arquivos ficam armazendos no diretório savingPath.
