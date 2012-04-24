@@ -10,6 +10,6 @@
 
   savingPath = '/Users/zz4fap/Desktop/BSS+ASR/simulations/EqualizedEnergy/';
 
-OBS.1: O estado de cada um dos scripts é armazenado em num arquivo texto com um dos seguintes nomes: "SimulationsInformationForRecordings\_1.txt" até "SimulationsInformationForRecordings_10.txt". Estes arquivos ficam armazendos no diretório savingPath.
+OBS.1: O estado de cada um dos scripts é armazenado em num arquivo texto com um dos seguintes nomes: "SimulationsInformationForRecordings_1.txt" até "SimulationsInformationForRecordings_10.txt". Estes arquivos ficam armazendos no diretório savingPath.
 
 OBS.2: Os arquivos SimulationsInformationForRecordings_x.txt já estão com os estados corretos. Quando uma das simulações parar, basta rodar o script novamente que este retomará de onde parou.
