@@ -1,15 +1,21 @@
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.management.InvalidAttributeValueException;
+import javax.naming.directory.InvalidAttributesException;
+
 public class JdbcTest {
 	
 	private static final String URL = "jdbc:mysql://SQL09.FREEMYSQL.NET:3306/";
 	private static final String DB_NAME = "noisybss";
+	private static final String SIMULATIONS_TABLE_NAME = "simulations";
 	private static final String DRIVER = "com.mysql.jdbc.Driver";
 	private static final String USER_NAME = "zz4fap";
 	private static final String PASSWD = "casa1234";
@@ -18,6 +24,9 @@ public class JdbcTest {
 	private static final String RECORDINGS_FILENAME = "recordings_"; // 1 to 10
 	private static final String NOISE_FILENAME = "babble.wav";
 	private static final String LEARNING_METHOD = "fixedstepsize";
+	
+	private static final String COMPLETED_SIMULATIONS_PATH = "/Users/zz4fap/Desktop/run_simulations/";
+	private static final String SIMULATION_INFO_FILE = "SimulationsInformationForRecordings_";
 	
 	private static final double[] STEPSIZE = {0.002, 0.004, 0.006, 0.008, 0.01, 0.03};
 	private static final int[] N = {256, 256, 512, 512};
@@ -30,19 +39,86 @@ public class JdbcTest {
 		JdbcTest jdbcTest = new JdbcTest();
 		
 		try {
-
 			Class.forName(DRIVER).newInstance();
 			conn = DriverManager.getConnection(URL + DB_NAME, USER_NAME, PASSWD);
 			System.out.println("Connected to the database");
-			jdbcTest.populateSimulationsTable(conn);
+			
+			if("populate".equals(args[0])) {
+				jdbcTest.populateSimulationsTable(conn);
+			} else if("update".equals(args[0])) {
+				jdbcTest.updateSimulationsTable(conn);
+			} else if("select".equals(args[0])) {
+				jdbcTest.selectAndShowFromSimulationsTable(conn, "*", null);
+			} else {
+				throw new InvalidAttributesException("Invalid command!!");
+			}
+			
 			conn.close();
 			System.out.println("Disconnected from database");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		
+	}
+	
+	private void updateSimulationsTable(Connection conn) {
+		int[] info = null;
+		try {
+			for(int i=1; i<=10; i++) {
+				info = getLasRunSimulation(COMPLETED_SIMULATIONS_PATH+SIMULATION_INFO_FILE+i+".txt");
 
+				if(info!=null){
+					for(int j=1; j<=info[0]; j++) { //iterates over each wave file.
+						for(int k=1; k<=24; k++) {
+							
+							int simulation_number = ((i-1)*2880 + ((j-1)*24 + k));
+							
+							updateTable(conn, SIMULATIONS_TABLE_NAME, "status=2", "simulation_number="+simulation_number);
+							
+							System.out.println("counter: "+simulation_number+" - file: "+i+" - wav: "+j+" - N/L: "+k);
+
+							if(j==info[0] && k==info[1]){
+								break;
+							} 
+						}
+					}
+				} else {
+					continue;
+				}
+				System.out.println("--------------");
+			}
+		} catch (InvalidAttributeValueException e) {
+			e.printStackTrace();
+		}
+	
+	}
+	
+	//null if file exists and is empty or if it doesn't exist.
+	//string vector with wave file number and simulation if there is some input.
+	private int[] getLasRunSimulation(String filename) throws InvalidAttributeValueException {
+		String str, lastRunSimulationString = null;
+		int[] lastRunSimulationInfo = null;
+
+		try {
+			FileReader fileReader = new FileReader(filename);
+			BufferedReader br = new BufferedReader(fileReader);
+
+			while ((str = br.readLine()) != null) {
+				lastRunSimulationString = str;
+			}
+
+			if(lastRunSimulationString!=null) {
+				int i = 0;
+				lastRunSimulationInfo = new int[2];
+				for(String info : lastRunSimulationString.split(" ")) {
+					lastRunSimulationInfo[i] = Integer.parseInt(info);
+					i++;
+				}
+			}
+
+		} catch (IOException e) {
+			// Do nothing.
+		}
+		return lastRunSimulationInfo;
 	}
 	
 	private void populateSimulationsTable(Connection conn) {
@@ -112,71 +188,48 @@ public class JdbcTest {
 		}
 	}
 	
-	private ResultSet selectFromTable(String table, String where_clause) {
-
-		ResultSet res = null;
-		Connection conn = null;
-
+	private void selectAndShowFromSimulationsTable(Connection conn, String what, String where_clause) {
+		ResultSet res = selectFromTable(conn, SIMULATIONS_TABLE_NAME, what, where_clause);
 		try {
-			Class.forName(DRIVER).newInstance();
-			conn = DriverManager.getConnection(URL + DB_NAME, USER_NAME, PASSWD);
-			System.out.println("Connected to the database");
-
-			try {
-				Statement st = conn.createStatement();
-				if(where_clause!=null) {
-					res = st.executeQuery("SELECT * FROM  "+table+" WHERE "+where_clause+"");
-				} else {
-					res = st.executeQuery("SELECT * FROM  "+table+"");
-				}
-				
-				while (res.next()) {
-					System.out.println(res.toString());
-				}
-
-			} catch (SQLException e) {
-				System.out.println("SQL code does not execute.");
-				System.err.println("Error message: " + e.getMessage());
-				System.err.println("Error number: " + e.getErrorCode());
+			while (res.next()) {
+				System.out.println(res.toString());
 			}
-
-			conn.close();
-			System.out.println("Disconnected from database");
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+	}
+	
+	private ResultSet selectFromTable(Connection conn, String table, String what, String where_clause) {
+		ResultSet res = null;
+		try {
+			Statement st = conn.createStatement();
+			if(where_clause!=null) {
+				res = st.executeQuery("SELECT "+what+" FROM  "+table+" WHERE "+where_clause+"");
+			} else {
+				res = st.executeQuery("SELECT "+what+" FROM  "+table+"");
+			}
+		} catch (SQLException e) {
+			System.out.println("SQL code does not execute.");
+			System.err.println("Error message: " + e.getMessage());
+			System.err.println("Error number: " + e.getErrorCode());
+		}		
 		return res;
 	}
 	
-	private void updateTable(String table, String set_clause, String where_clause) {
-		Connection conn = null;
-
+	private void updateTable(Connection conn, String table, String set_clause, String where_clause) {
 		try {
-			Class.forName(DRIVER).newInstance();
-			conn = DriverManager.getConnection(URL + DB_NAME, USER_NAME, PASSWD);
-			System.out.println("Connected to the database");
-
-			try {
-				Statement st = conn.createStatement();
-				
-				int count = 0;
-				if(where_clause!=null){
-					count = st.executeUpdate("UPDATE "+table+" SET "+set_clause+" WHERE "+where_clause+"");
-				} else {
-					st.executeUpdate("UPDATE "+table+" SET "+set_clause+"");
-				}
-				System.out.println(count + " rows were inserted");
-			} catch (SQLException e) {
-				System.out.println("SQL code does not execute.");
-				System.err.println("Error message: " + e.getMessage());
-				System.err.println("Error number: " + e.getErrorCode());
+			Statement st = conn.createStatement();
+			int count = 0;
+			if(where_clause!=null){
+				count = st.executeUpdate("UPDATE "+table+" SET "+set_clause+" WHERE "+where_clause+"");
+			} else {
+				st.executeUpdate("UPDATE "+table+" SET "+set_clause+"");
 			}
-
-			conn.close();
-			System.out.println("Disconnected from database");
-		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println(count + " rows were inserted");
+		} catch (SQLException e) {
+			System.out.println("SQL code does not execute.");
+			System.err.println("Error message: " + e.getMessage());
+			System.err.println("Error number: " + e.getErrorCode());
 		}
 	}
 }
