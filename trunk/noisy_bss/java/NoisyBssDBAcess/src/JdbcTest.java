@@ -12,7 +12,7 @@ import javax.management.InvalidAttributeValueException;
 import javax.naming.directory.InvalidAttributesException;
 
 public class JdbcTest {
-	
+
 	private static final String URL = "jdbc:mysql://SQL09.FREEMYSQL.NET:3306/";
 	private static final String DB_NAME = "noisybss";
 	private static final String SIMULATIONS_TABLE_NAME = "simulations";
@@ -24,21 +24,21 @@ public class JdbcTest {
 	private static final String RECORDINGS_FILENAME = "recordings_"; // 1 to 10
 	private static final String NOISE_FILENAME = "babble.wav";
 	private static final String LEARNING_METHOD = "fixedstepsize";
-	
+
 	private static final String COMPLETED_SIMULATIONS_PATH = "/Users/zz4fap/Desktop/run_simulations/";
 	private static final String SIMULATION_INFO_FILE = "SimulationsInformationForRecordings_";
-	
+
 	private static final double[] STEPSIZE = {0.002, 0.004, 0.006, 0.008, 0.01, 0.03};
 	private static final int[] N = {256, 256, 512, 512};
 	private static final int[] L = {64, 128, 128, 256};
 	private static final int EPOCHS = 500;
-	
-	private enum CMD {UNKNOWN, POPULATE, UPDATE, SELECT, RAW};
+
+	private enum CMD {UNKNOWN, POPULATE, UPDATE, SELECT, RAW, LOCK};
 
 	public static void main(String[] args) {
 		Connection conn = null;
 		CMD cmd = null;
-		
+
 		JdbcTest jdbcTest = new JdbcTest();
 
 		if((cmd = jdbcTest.handleInputArgs(args))==CMD.UNKNOWN) {
@@ -46,51 +46,58 @@ public class JdbcTest {
 			return;
 		}
 		System.out.println("Command: "+cmd);
-		
+
 		try {
 			Class.forName(DRIVER).newInstance();
 			conn = DriverManager.getConnection(URL + DB_NAME, USER_NAME, PASSWD);
 			System.out.println("Connected to the database");
-			
+
 			switch(cmd) {
-				case POPULATE:
-					jdbcTest.populateSimulationsTable(conn);
-					break;
-				case UPDATE:
-					int numberOfUpdatedRows = jdbcTest.updateSimulationsTable(conn);
-					System.out.println("Number of updated rows: "+numberOfUpdatedRows);
-					break;
-				case SELECT:
-					jdbcTest.selectAndShowFromSimulationsTable(conn, "*", null);
-					break;
-				case RAW:
-				case UNKNOWN:
-				default:
-					System.out.println("Unknown command");
-					return;
+			case POPULATE:
+				jdbcTest.populateSimulationsTable(conn);
+				break;
+			case UPDATE:
+				int numberOfUpdatedRows = jdbcTest.updateSimulationsTable(conn);
+				System.out.println("Number of updated rows: "+numberOfUpdatedRows);
+				break;
+			case SELECT:
+				jdbcTest.selectAndShowFromSimulationsTable(conn, "*", null);
+				break;
+			case LOCK:
+				jdbcTest.lockTable(conn, "tests_table");
+				break;
+			case RAW:
+			case UNKNOWN:
+			default:
+				System.out.println("Unknown command");
+				return;
 			}
-			
+
 			conn.close();
 			System.out.println("Disconnected from database");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private CMD handleInputArgs(String[] args) {
 		CMD cmd = CMD.UNKNOWN;
 		if(args.length > 0) {
-			if("populate".equals(args[0])) {
+			String str = args[0];
+			str.toLowerCase();
+			if("populate".equals(str)) {
 				cmd = CMD.POPULATE;
-			} else if("update".equals(args[0])) {
+			} else if("update".equals(str)) {
 				cmd = CMD.UPDATE;
-			} else if("select".equals(args[0])) {
+			} else if("select".equals(str)) {
 				cmd = CMD.SELECT;
+			} else if("lock".equals(str)) {
+				cmd = CMD.LOCK;
 			}
 		}
 		return cmd;
 	}
-	
+
 	private int updateSimulationsTable(Connection conn) {
 		int[] info = null;
 		int numberOfUpdatedRows = 0;
@@ -125,7 +132,7 @@ public class JdbcTest {
 		}
 		return numberOfUpdatedRows;
 	}
-	
+
 	//null if file exists and is empty or if it doesn't exist.
 	//string vector with wave file number and simulation if there is some input.
 	private int[] getLasRunSimulation(String filename) throws InvalidAttributeValueException {
@@ -154,29 +161,29 @@ public class JdbcTest {
 		}
 		return lastRunSimulationInfo;
 	}
-	
+
 	private void populateSimulationsTable(Connection conn) {
 		int counter = 1;
 		List<String> recordings;
-		
+
 		for(int i=1; i<=10; i++) {
 			recordings = openRecordingsFile(RECORDINGS_FILENAME + i);
 			for(String recording : recordings) {
-				
+
 				for(double stepsize : STEPSIZE) {
-					
+
 					for(int n=0; n<N.length; n++) {
-						
+
 						insertIntoSimulationsTable(conn, recording, NOISE_FILENAME, stepsize, N[n], L[n], LEARNING_METHOD, EPOCHS);
-					
+
 						System.out.println("counter: " + counter
 								+ " wav_filename: " + recording
 								+ " noise_filename: " + NOISE_FILENAME
 								+ " stepsize: " + stepsize
 								+ " N: " + N[n]
-								+ " L: " + L[n]
-								+ " learning_method: " + LEARNING_METHOD
-								+ " epochs: " + EPOCHS);
+										+ " L: " + L[n]
+												+ " learning_method: " + LEARNING_METHOD
+												+ " epochs: " + EPOCHS);
 
 						counter++;
 					}
@@ -221,7 +228,7 @@ public class JdbcTest {
 			System.err.println("Error number: " + e.getErrorCode());
 		}
 	}
-	
+
 	private void selectAndShowFromSimulationsTable(Connection conn, String what, String where_clause) {
 		ResultSet res = selectFromTable(conn, SIMULATIONS_TABLE_NAME, what, where_clause);
 		try {
@@ -232,7 +239,7 @@ public class JdbcTest {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private ResultSet selectFromTable(Connection conn, String table, String what, String where_clause) {
 		ResultSet res = null;
 		try {
@@ -249,7 +256,7 @@ public class JdbcTest {
 		}		
 		return res;
 	}
-	
+
 	private void updateTable(Connection conn, String table, String set_clause, String where_clause) {
 		try {
 			Statement st = conn.createStatement();
@@ -264,6 +271,38 @@ public class JdbcTest {
 			System.out.println("SQL code does not execute.");
 			System.err.println("Error message: " + e.getMessage());
 			System.err.println("Error number: " + e.getErrorCode());
+		}
+	}
+
+	private void lockTable(Connection conn, String table) {
+		String lock = "LOCK TABLE " + table + " WRITE";
+		Statement stmt = null;
+		try {
+			conn.setAutoCommit(false);
+			stmt = conn.createStatement();
+			stmt.execute(lock);
+			System.out.println("Locking now....");
+			try {
+				for(int i=0; i<4; i++) {
+					Thread.sleep(9000);
+					stmt.executeQuery("SELECT * FROM  "+table+"");
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			//int count = stmt.executeUpdate("INSERT INTO "+table+" (wav_filename, noise_filename, stepsize, N, L, learning_method, epochs) VALUES ('arroba.wav', 'babble.wav', 0.023, 256, 16,'fixedstepsize', 500)");
+			//System.out.println(count + " rows were inserted");
+			conn.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			if (stmt != null) {
+				try {
+					stmt.execute("UNLOCK TABLES");
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 }
