@@ -16,6 +16,6 @@
 
 5) Abra e execute (run) o script: *script.m*
 
-6) Acesse *https://twitter.com/#!/zz4fap* e acompanhe os resultados das simulações.
+6) Acesse https://twitter.com/#!/zz4fap e acompanhe os resultados das simulações.
 
 OBS.: Você pode abrir mais de uma instancia do MATLAB e rodar outras simulações em paralelo. Para isto siga os passos 4 e 5 para cada nova instancia do MATLAB.
