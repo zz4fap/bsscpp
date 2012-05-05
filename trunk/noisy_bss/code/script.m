@@ -17,15 +17,13 @@ else
     savingPath = '/Users/zz4fap/Desktop/BSS+ASR/simulations/EnergyNotEqualized/';
 end
 
-savingPath = '/Users/zz4fap/Desktop/';
-
 %----- pre-defined values ------
 filename = 'SimulationsInformationForRecordings.txt';
 
 fs = [8000]; % Sampling frequency is given in Hz
 
 server = 'server2';
-table = 'tests_table';
+table = 'simulations';
 where = 'status=0';
 
 AVAILABLE_SIMULATIONS_FILE = 'available_simulations.txt';
