@@ -17,13 +17,13 @@ else
     savingPath = '/Users/zz4fap/Desktop/BSS+ASR/simulations/EnergyNotEqualized/';
 end
 
-%----- pre-defined values ------
+%----- pre-defined values (DO NOT CHANGE THE VALUES BELOW) ------
 filename = 'SimulationsInformationForRecordings.txt';
 
 fs = [8000]; % Sampling frequency is given in Hz
 
 server = 'server2';
-table = 'simulations';
+table = 'tests_table';
 where = 'status=0';
 
 AVAILABLE_SIMULATIONS_FILE = 'available_simulations.txt';
@@ -35,7 +35,7 @@ while 1
     % Check if the file available_simulations.txt exists
     fid = fopen(AVAILABLE_SIMULATIONS_FILE, 'rb');
     if(fid==-1)
-        %Get available simulations from SQL Server.
+        %Get available simulations from SQL Server. OBS.: '*' can be substituted by 'all_columns' in case something goes wrong with *.
         cmd = sprintf('java -jar bsscpp_dbaccess.jar %s retrieve %s \\* %s %d',server, table, where, 1);
         [status, result] = system(cmd);
         if(status==0)
