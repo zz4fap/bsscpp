@@ -1,12 +1,10 @@
 =How To Run Simulations=
 
-1) Faça check out do código fonte: svn checkout http://bsscpp.googlecode.com/svn/trunk/ bsscpp-read-only
+1) Faça check out do código fonte: *svn checkout http://bsscpp.googlecode.com/svn/trunk/ bsscpp-read-only*
 
-2) Vá até a seção "Downloads" e baixe o arquivo:
+2) Vá até a seção "Downloads" e baixe e descompacte o arquivo: *data_base.zip*
 
-1) Escolha um script para executar : "script_1.m" até "script_10.m"
-
-2) Mudar os diretórios: speakersPath, noisesPath, savingPath em cada um dos scripts que serão executados. Por exemplo:
+3) Abra o arquivo *script.m* e modifique os caminhos dos diretórios: speakersPath, noisesPath e savingPath. Estes caminhos devem apontar para os diretórios onde estão a base de dados e onde as simulações serão armazenadas. Siga o seguinte exemplo:
 
   speakersPath = '/Users/zz4fap/Desktop/BSS+ASR/data_base/speech/todos/treino/wav/';
 
@@ -14,6 +12,10 @@
 
   savingPath = '/Users/zz4fap/Desktop/BSS+ASR/simulations/EqualizedEnergy/';
 
-OBS.1: O estado de cada um dos scripts é armazenado em num arquivo texto com um dos seguintes nomes: "SimulationsInformationForRecordings_1.txt" até "SimulationsInformationForRecordings_10.txt". Estes arquivos ficam armazendos no diretório savingPath.
+4) Inicie o MATLAB e aponte sua workspace para o diretório onde o código fonte foi baixado.
 
-OBS.2: Os arquivos SimulationsInformationForRecordings_x.txt já estão com os estados corretos. Quando uma das simulações parar, basta rodar o script novamente que este retomará de onde parou.
+5) Abra e execute (run) o script: *script.m*
+
+6) Acesse *https://twitter.com/#!/zz4fap* e acompanhe os resultados das simulações.
+
+OBS.: Você pode abrir mais de uma instancia do MATLAB e rodar outras simulações em paralelo. Para isto siga os passos 4 e 5 para cada nova instancia do MATLAB.
