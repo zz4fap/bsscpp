@@ -1,6 +1,8 @@
 =How To Run Simulations=
 
-1) Faça dowload dos scripts: 
+1) Faça check out do código fonte: svn checkout http://bsscpp.googlecode.com/svn/trunk/ bsscpp-read-only
+
+2) Vá até a seção "Downloads" e baixe o arquivo:
 
 1) Escolha um script para executar : "script_1.m" até "script_10.m"
 
