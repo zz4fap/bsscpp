@@ -1,4 +1,6 @@
-=How To Run a Simulation=
+=How To Run Simulations=
+
+1) Faça dowload dos scripts: 
 
 1) Escolha um script para executar : "script_1.m" até "script_10.m"
 
