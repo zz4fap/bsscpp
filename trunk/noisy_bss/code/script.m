@@ -5,16 +5,31 @@ clear all;
 clc;
 
 %----- user-defined values ------
-% Location of the speech and noise files
-speakersPath = '/Users/zz4fap/Desktop/BSS+ASR/data_base/speech/todos/treino/wav/';
-noisesPath = '/Users/zz4fap/Desktop/BSS+ASR/data_base/noises/wav/short/';
-
 equalizeEnergyToGreaterOne = true;
 
-if(equalizeEnergyToGreaterOne)
-    savingPath = '/Users/zz4fap/Desktop/BSS+ASR/simulations/EqualizedEnergy/';
+user = java.lang.System.getProperty('user.name');
+if(strcmp('zz4fap',user)==1)
+    % Location of the speech and noise files
+    speakersPath = '/Users/zz4fap/Desktop/BSS+ASR/data_base/speech/todos/treino/wav/';
+    noisesPath = '/Users/zz4fap/Desktop/BSS+ASR/data_base/noises/wav/short/';
+
+    if(equalizeEnergyToGreaterOne)
+        savingPath = '/Users/zz4fap/Desktop/BSS+ASR/simulations/EqualizedEnergy/';
+    else
+        savingPath = '/Users/zz4fap/Desktop/BSS+ASR/simulations/EnergyNotEqualized/';
+    end
+elseif(strcmp('ynoguti',user)==1)
+    % Location of the speech and noise files
+    speakersPath = 'c:\\users\\ynoguti\\documents\\matlab\\ynoguti\\data_base\\speech\\todos\\treino\\wav\\';
+    noisesPath = 'c:\\users\\ynoguti\\documents\\matlab\\ynoguti\\data_base\\noises\\wav\\short\\';
+
+    if(equalizeEnergyToGreaterOne)
+        savingPath = 'c:\\users\\ynoguti\\documents\\matlab\\ynoguti\\simulations\\EqualizedEnergy\\';
+    else
+        savingPath = 'c:\\users\ynoguti\\documents\\matlab\\ynoguti\\simulations\\EnergyNotEqualized\\';
+    end
 else
-    savingPath = '/Users/zz4fap/Desktop/BSS+ASR/simulations/EnergyNotEqualized/';
+    error('You must define some paths before running the simulations!!!!');
 end
 
 %----- pre-defined values (DO NOT CHANGE THE VALUES BELOW) ------
@@ -36,7 +51,7 @@ while 1
     fid = fopen(AVAILABLE_SIMULATIONS_FILE, 'rb');
     if(fid==-1)
         %Get available simulations from SQL Server. OBS.: '*' can be substituted by 'all_columns' in case something goes wrong with *.
-        cmd = sprintf('java -jar bsscpp_dbaccess.jar %s retrieve %s \\* %s %d',server, table, where, 1);
+        cmd = sprintf('java -jar bsscpp_dbaccess.jar %s retrieve %s all_columns %s %d',server, table, where, 1);
         [status, result] = system(cmd);
         if(status==0)
             bsscpp_info('There are no available simulations. All simulations are either finished or running.');
