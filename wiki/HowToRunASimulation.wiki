@@ -2,7 +2,7 @@
 
 1) Faça check out do código fonte: *svn checkout http://bsscpp.googlecode.com/svn/trunk/ bsscpp-read-only*
 
-2) Vá até a seção "Downloads" e baixe e descompacte o arquivo: *data_base.zip*
+2) Vá até a seção "Downloads" baixe e descompacte o arquivo: *data_base.zip*
 
 3) Abra o arquivo *script.m* e modifique os caminhos dos diretórios: speakersPath, noisesPath e savingPath. Estes caminhos devem apontar para os diretórios onde estão a base de dados e onde as simulações serão armazenadas. Siga o seguinte exemplo:
 
@@ -14,7 +14,7 @@
 
 4) Inicie o MATLAB e aponte sua workspace para o diretório onde o código fonte foi baixado.
 
-5) Abra e execute (run) o script: *script.m*
+5) Execute (run) o script: *script.m*
 
 6) Acesse https://twitter.com/#!/zz4fap e acompanhe os resultados das simulações.
 
