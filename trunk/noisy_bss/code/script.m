@@ -19,7 +19,6 @@ if(strcmp('zz4fap',user)==1)
     else
         savingPath = '/Users/zz4fap/Desktop/BSS+ASR/simulations/EnergyNotEqualized/';
     end
-    table = 'tests_table';
 elseif(strcmp('ynoguti',user)==1)
     % Location of the speech and noise files
     speakersPath = 'c:\\users\\ynoguti\\documents\\matlab\\ynoguti\\data_base\\speech\\todos\\treino\\wav\\';
@@ -30,7 +29,6 @@ elseif(strcmp('ynoguti',user)==1)
     else
         savingPath = 'c:\\users\ynoguti\\documents\\matlab\\ynoguti\\simulations\\EnergyNotEqualized\\';
     end
-    table = 'simulations';
 else
     error('You must define some paths before running the simulations!!!!');
 end
@@ -40,6 +38,7 @@ filename = 'SimulationsInformationForRecordings.txt';
 
 fs = [8000]; % Sampling frequency is given in Hz
 
+table = 'simulations';
 server = 'server2';
 where = 'status=0';
 
