@@ -1,4 +1,4 @@
-function []=ConfigurationScriptv3(fs, speakers, noises, stepsize, N, L, equalizeEnergyToGreaterOne, filename, NumberOfEpochs, speakersPath, noisesPath, savingPath)
+function [averagetime SIR_final durationForStr SIR_inicial]=ConfigurationScriptv3(fs, speakers, noises, stepsize, N, L, equalizeEnergyToGreaterOne, filename, NumberOfEpochs, speakersPath, noisesPath, savingPath)
 
 numEpocas = NumberOfEpochs;
 duration = 0; % Use 0 for the whole utterance. This value is given is seconds [s].
@@ -46,5 +46,5 @@ methodForAutoCorrelation = 'efficientcorrelation';
 
 blockLenght = L;
 
-SeparateVoicesforMultipleTrialsv2(numEpocas, duration, constraint, fs, learningMethod, boldDriverFunction, momentum, stepsize, L, N, isL2Norm, isChangeMethodAllowed, epochToChangeMethod, newLearningMethod, changeStepSize, newStepSize, isNormalizingYAllowed, isAutomaticChangeOfAlgorithmAllowed, decayingFactor, initializationType, speakers, noises, startFrom, isRecordingOfOutputWavesAllowed, equalizeVectorsToGreaterLentg, equalizeEnergyToGreaterOne, h11, h12, h21, h22,filterset,uMin,uMax,divByN,overlapping,a,methodForCrossCorrelation,methodForAutoCorrelation,blockLenght, speakersPath, noisesPath, savingPath, filename);
+[averagetime SIR_final durationForStr SIR_inicial]=SeparateVoicesforMultipleTrialsv2(numEpocas, duration, constraint, fs, learningMethod, boldDriverFunction, momentum, stepsize, L, N, isL2Norm, isChangeMethodAllowed, epochToChangeMethod, newLearningMethod, changeStepSize, newStepSize, isNormalizingYAllowed, isAutomaticChangeOfAlgorithmAllowed, decayingFactor, initializationType, speakers, noises, startFrom, isRecordingOfOutputWavesAllowed, equalizeVectorsToGreaterLentg, equalizeEnergyToGreaterOne, h11, h12, h21, h22,filterset,uMin,uMax,divByN,overlapping,a,methodForCrossCorrelation,methodForAutoCorrelation,blockLenght, speakersPath, noisesPath, savingPath, filename);
 %--------------------------------------------------
