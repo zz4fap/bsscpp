@@ -1,4 +1,4 @@
-function [] = SeparateVoicesforMultipleTrialsv2(numEpocas, duration, constraint, fs, learningMethod, boldDriverFunction, momentum, stepsize, L, N, isL2Norm, isChangeMethodAllowed, epochToChangeMethod, newLearningMethod, changeStepSize, newStepSize, isNormalizingYAllowed, isAutomaticChangeOfAlgorithmAllowed, decayingFactor, initializationType, speakers, noises, startFrom,isRecordingOfOutputWavesAllowed, equalizeVectorsToGreaterLentg, equalizeEnergyToGreaterOne, h11, h12, h21, h22,filterSet,uMin,uMax,divByN,overlapping,a,methodForCrossCorrelation,methodForAutoCorrelation,blockLenght, speakersPath, noisesPath, savingPath, filenameForSimulationsInformation)
+function [averagetime SIR_final durationForStr SIR_inicial] = SeparateVoicesforMultipleTrialsv2(numEpocas, duration, constraint, fs, learningMethod, boldDriverFunction, momentum, stepsize, L, N, isL2Norm, isChangeMethodAllowed, epochToChangeMethod, newLearningMethod, changeStepSize, newStepSize, isNormalizingYAllowed, isAutomaticChangeOfAlgorithmAllowed, decayingFactor, initializationType, speakers, noises, startFrom,isRecordingOfOutputWavesAllowed, equalizeVectorsToGreaterLentg, equalizeEnergyToGreaterOne, h11, h12, h21, h22,filterSet,uMin,uMax,divByN,overlapping,a,methodForCrossCorrelation,methodForAutoCorrelation,blockLenght, speakersPath, noisesPath, savingPath, filenameForSimulationsInformation)
 
 fprintf(1,'Recording path of speakers: %s\n', speakersPath);
 fprintf(1,'Recording path of noises: %s\n', noisesPath);
@@ -159,6 +159,9 @@ for speakersCounter=1:1:length(speakers)
                                     end
 
                                     SIR_final = 10*log10((OutputSIR(1,1,(numEpocas+1)) + OutputSIR(1,2,(numEpocas+1)))/2);
+
+                                    %calcula initial SIR
+                                    SIR_inicial = 10*log10((OutputSIR(1,1,1) + OutputSIR(1,2,1))/2);
 
                                     str1 = strcat(str1,sprintf('_%1.2fdB',SIR_final));
 
