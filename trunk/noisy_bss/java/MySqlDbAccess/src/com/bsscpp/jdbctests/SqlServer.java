@@ -15,10 +15,11 @@ public class SqlServer {
 	private final String PASSWD = "casa1234";
 	
 	public static final String SIMULATIONS_TABLE_NAME = "simulations";
+	public static final String SIMULATIONS_BACKUP_TABLE_NAME = "simulations_backup";
 	public static final String RESULTS_TABLE_NAME = "results";
 	public static final String TESTS_TABLE_NAME = "tests_table";
 	
-	public static final String[] TABLES  = {SIMULATIONS_TABLE_NAME, RESULTS_TABLE_NAME, TESTS_TABLE_NAME};
+	public static final String[] TABLES  = {SIMULATIONS_TABLE_NAME, RESULTS_TABLE_NAME, TESTS_TABLE_NAME, SIMULATIONS_BACKUP_TABLE_NAME};
 	
 	private Connection mConnection;
 	

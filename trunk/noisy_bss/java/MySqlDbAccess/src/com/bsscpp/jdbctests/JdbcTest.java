@@ -3,6 +3,7 @@ package com.bsscpp.jdbctests;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,25 +28,28 @@ public class JdbcTest {
 	private String mWhere;
 	private int mNewStatus;
 	private int mSimulationNumber;
+	private String mNewResultsFile;
+	private String mPath2NewResults;
 
 	public static void main(String[] args) {
-		
+
 		JdbcTest jdbcTest = new JdbcTest();
 
 		if(!jdbcTest.handleInputArgs(args)) {
 			return;
 		}
-		
+
 		int res = jdbcTest.executeCommand();
+		System.out.println("Command result: "+res);
 		System.exit(res);
 	}
-	
+
 	private int executeCommand() {
-		int result = RET_VALUES.ERROR;
+		int result = RET_VALUES.GENERIC_ERROR;
 		try {
 			if(!mServer.connectToDb()) {
 				System.out.println("It was impossible to connect to the SQL server... aborting operation...");
-				return result;
+				return RET_VALUES.SERVER_IS_DOWN_ERROR;
 			}
 			System.out.println("Connected to the database");
 
@@ -76,6 +80,12 @@ public class JdbcTest {
 			case UPDATE_STATUS_OF_FILE:
 				result = updateStatusOfSimulationsInFile(mTable, mNewStatus, INFO.AVAILABLE_SIMULATIONS_FILE);
 				break;
+			case INSERT_NEW_FINISHED_SIMULATONS:
+				result = updateDataBaseWithNewRunSimulations(mTable, mPath2NewResults, mNewResultsFile);
+				break;
+			case ADD_RESULTS:
+				result = addResultsToResultsTable();
+				break;
 			case RAW:
 			case UNKNOWN:
 			default:
@@ -90,7 +100,7 @@ public class JdbcTest {
 		}
 		return result;
 	}
-	
+
 	public int testConnection() {
 		System.out.println("URL: "+mServer.URL);
 		return RET_VALUES.SUCCESS;
@@ -137,6 +147,13 @@ public class JdbcTest {
 				if(!handleUpdateStatusOfFileCmdArgs(args)) {
 					return false;
 				}
+			} else if("insert_new_simulations".equals(str)) {
+				mCmd = Constants.CMD.INSERT_NEW_FINISHED_SIMULATONS;
+				if(!handleInsertNewSimulationsCmdArgs(args)) {
+					return false;
+				}
+			} else if("add_results".equals(str)) {
+				mCmd = Constants.CMD.ADD_RESULTS;
 			} else {
 				System.out.println("Invalid command. \nAvailable Commands: \n"+Constants.CMD.getCmds());
 				return false;
@@ -148,7 +165,39 @@ public class JdbcTest {
 		}
 		return true;
 	}
-	
+
+	public boolean handleInsertNewSimulationsCmdArgs(String[] args) {
+		if(args.length < 5) {
+			System.out.println("Usage: insert_new_simulations [table] [path_2_folder_with_new_results] [file_with_new_results]");
+			return false;
+		} else {
+			// figure out which table must be used.
+			mTable = null;
+			for(String table: SqlServer.TABLES) {
+				if(table.equals(args[2])) {
+					mTable = table;
+					break;
+				}
+			}
+			if(mTable==null) {
+				System.out.println("Invalid table name: "+args[2]);
+				return false;
+			}
+
+			if("".equals(args[3])) {
+				return false;
+			}			
+			mPath2NewResults = args[3];
+
+			if("".equals(args[4])) {
+				return false;
+			}
+			mNewResultsFile = args[4];
+			System.out.println("insert_new_simulations "+mTable+" "+mNewResultsFile);
+			return true;
+		}
+	}
+
 	public boolean handleRetrieveCmdArgs(String[] args) {
 		if(args.length < 6) {
 			System.out.println("retrieve [table] [what] [where] [new_status]");
@@ -166,14 +215,18 @@ public class JdbcTest {
 				System.out.println("Invalid table name: "+args[2]);
 				return false;
 			}
-			mWhat = args[3];
+			if("all_columns".equals(args[3])) {
+				mWhat = "*";
+			} else {
+				mWhat = args[3];
+			}
 			mWhere = args[4];
 			mNewStatus = Integer.parseInt(args[5]);
 			System.out.println("retrieve "+mTable+" "+mWhat+" "+mWhere+" "+mNewStatus);
 			return true;
 		}
 	}
-	
+
 	public boolean handleUpdateStatusCmdArgs(String[] args) {
 		if(args.length < 5) {
 			System.out.println("update_status [table] [new_status] [simulation_number]");
@@ -197,7 +250,7 @@ public class JdbcTest {
 			return true;
 		}
 	}
-	
+
 	public boolean handleUpdateStatusOfFileCmdArgs(String[] args) {
 		if(args.length < 4) {
 			System.out.println("update_status_of_file [table] [new_status]");
@@ -224,7 +277,7 @@ public class JdbcTest {
 	private int updateSimulationsTable() {
 		int[] info = null;
 		int numberOfUpdatedRows = 0;
-		
+
 		try {
 			for(int i=1; i<=10; i++) {
 				info = getLastRunSimulation(INFO.COMPLETED_SIMULATIONS_PATH+INFO.SIMULATION_INFO_FILE+i+".txt");
@@ -258,22 +311,27 @@ public class JdbcTest {
 		}
 		return numberOfUpdatedRows;
 	}
-	
-	public int updateDataBaseWithNewRunSimulations(String newResultsFile) {
+
+	public int updateDataBaseWithNewRunSimulations(String table2Update, String path2NewResults, String newResultsFile) {
 		int numberOfUpdatedRows = 0;
 		String[] splitString = newResultsFile.split("_");
 		splitString = (splitString[1]).split("\\.");
 		int i = Integer.parseInt(splitString[0]);
 
 		try {
+			System.out.println("Old: "+INFO.COMPLETED_SIMULATIONS_PATH+INFO.SIMULATION_INFO_FILE+i+".txt");
+			System.out.println("New: "+path2NewResults+newResultsFile);
 			int[] oldInfo = getLastRunSimulation(INFO.COMPLETED_SIMULATIONS_PATH+INFO.SIMULATION_INFO_FILE+i+".txt");
-			int[] newInfo = getLastRunSimulation(newResultsFile);
-			
+			int[] newInfo = getLastRunSimulation(path2NewResults+newResultsFile);
+
 			if(oldInfo[0]==newInfo[0] && oldInfo[1]==newInfo[1]) {
+				System.out.println("Both files have the same number of simulations!!! Not updating...");
 				return 0;
 			}
 
 			if(oldInfo!=null && newInfo!=null) {
+				System.out.println("Old wav#: "+oldInfo[0]+", old simu#: "+oldInfo[1]);
+				System.out.println("New wav#: "+newInfo[0]+", new simu#: "+newInfo[1]);
 				for(int j=oldInfo[0]; j<=newInfo[0]; j++) { //iterates over the set of wave files.
 					for(int k=(oldInfo[1]+1); k<=24; k++) {
 
@@ -281,7 +339,7 @@ public class JdbcTest {
 
 						numberOfUpdatedRows++;
 
-						updateTable(SqlServer.SIMULATIONS_TABLE_NAME, "status=2", "simulation_number="+simulation_number);
+						updateTable(table2Update, "status=2", "simulation_number="+simulation_number);
 
 						String simulationInfo = "counter="+simulation_number+",file="+i+",wav="+j+",N/L="+k;
 						System.out.println(simulationInfo);
@@ -357,7 +415,7 @@ public class JdbcTest {
 				}
 			}
 		}
-		
+
 		return RET_VALUES.SUCCESS;
 	}
 
@@ -407,9 +465,9 @@ public class JdbcTest {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			result = RET_VALUES.ERROR;
+			result = RET_VALUES.GENERIC_ERROR;
 		}
-		
+
 		return result;
 	}
 
@@ -465,7 +523,7 @@ public class JdbcTest {
 			conn.commit();
 		} catch (Exception e) {
 			e.printStackTrace();
-			res = RET_VALUES.ERROR;
+			res = RET_VALUES.GENERIC_ERROR;
 		} finally {
 			if (stmt != null) {
 				try {
@@ -473,13 +531,13 @@ public class JdbcTest {
 					System.out.println("Table unlocked.");
 				} catch (SQLException e) {
 					e.printStackTrace();
-					res = RET_VALUES.ERROR;
+					res = RET_VALUES.GENERIC_ERROR;
 				}
 			}
 		}
 		return res;
 	}
-	
+
 	public int retrieveAvailableSimulations(String table, String what, String where_clause, int newStatus) {
 		int numberOfAvailableSimulations = 0;
 		ResultSet res = null;
@@ -491,7 +549,7 @@ public class JdbcTest {
 			stmt = conn.createStatement();
 			stmt.execute(lock);
 			System.out.println("Locking now....");
-			
+
 			System.out.println("SELECT "+what+" FROM "+table+" WHERE "+where_clause+" LIMIT 5"+"");
 
 			res = stmt.executeQuery("SELECT "+what+" FROM "+table+" WHERE "+where_clause+" LIMIT 5"+"");
@@ -506,15 +564,15 @@ public class JdbcTest {
 				String learning_method = res.getString("learning_method");
 				int epochs = res.getInt("epochs");
 				int status = res.getInt("status");
-				
+
 				PreparedStatement preparedStatement = conn.prepareStatement("UPDATE "+table+" SET status=? " + "WHERE simulation_number=?");
 				preparedStatement.setInt(1,newStatus); 
 				preparedStatement.setInt(2,simulation_number); 
 				preparedStatement.execute(); 
 				preparedStatement.clearParameters();
-				
+
 				numberOfAvailableSimulations++;
-				
+
 				String result = "simulation_number=" + simulation_number
 						+ ",wav_filename=" + wav + ",noise_filename=" + noise
 						+ ",stepsize=" + stepsize + ",N=" + N + ",L=" + L
@@ -527,7 +585,7 @@ public class JdbcTest {
 			conn.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			numberOfAvailableSimulations = RET_VALUES.ERROR;
+			numberOfAvailableSimulations = RET_VALUES.GENERIC_ERROR;
 		} finally {
 			if (stmt != null) {
 				try {
@@ -535,13 +593,13 @@ public class JdbcTest {
 					System.out.println("Table unlocked.");
 				} catch (SQLException e) {
 					e.printStackTrace();
-					numberOfAvailableSimulations = RET_VALUES.ERROR;
+					numberOfAvailableSimulations = RET_VALUES.GENERIC_ERROR;
 				}
 			}
 		}
 		return numberOfAvailableSimulations;
 	}
-	
+
 	public int updateStatus(String table, int newStatus, int simulation_number) {
 		int ret = 1;
 		Statement stmt = null;
@@ -552,17 +610,17 @@ public class JdbcTest {
 			stmt = conn.createStatement();
 			stmt.execute(lock);
 			System.out.println("Locking now....");
-			
+
 			PreparedStatement preparedStatement = conn.prepareStatement("UPDATE "+table+" SET status=? " + "WHERE simulation_number=?");
 			preparedStatement.setInt(1,newStatus); 
 			preparedStatement.setInt(2,simulation_number); 
 			preparedStatement.execute(); 
 			preparedStatement.clearParameters();
-			
+
 			conn.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			ret = RET_VALUES.ERROR;
+			ret = RET_VALUES.GENERIC_ERROR;
 		} finally {
 			if (stmt != null) {
 				try {
@@ -570,13 +628,13 @@ public class JdbcTest {
 					System.out.println("Table unlocked.");
 				} catch (SQLException e) {
 					e.printStackTrace();
-					ret = RET_VALUES.ERROR;
+					ret = RET_VALUES.GENERIC_ERROR;
 				}
 			}
 		}
 		return ret;	
 	}
-	
+
 	public int updateStatusOfSimulationsInFile(String table, int newStatus, String filename) {
 		int ret = 1;
 		Statement stmt = null;
@@ -587,7 +645,7 @@ public class JdbcTest {
 			stmt = conn.createStatement();
 			stmt.execute(lock);
 			System.out.println("Locking now....");
-			
+
 			for(int simulation_number : getSimulationNumbersFromFile(filename)) {
 				PreparedStatement preparedStatement = conn.prepareStatement("UPDATE "+table+" SET status=? " + "WHERE simulation_number=?");
 				preparedStatement.setInt(1,newStatus); 
@@ -595,11 +653,11 @@ public class JdbcTest {
 				preparedStatement.execute(); 
 				preparedStatement.clearParameters();
 			}
-			
+
 			conn.commit();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			ret = RET_VALUES.ERROR;
+			ret = RET_VALUES.GENERIC_ERROR;
 		} finally {
 			if (stmt != null) {
 				try {
@@ -607,27 +665,114 @@ public class JdbcTest {
 					System.out.println("Table unlocked.");
 				} catch (SQLException e) {
 					e.printStackTrace();
-					ret = RET_VALUES.ERROR;
+					ret = RET_VALUES.GENERIC_ERROR;
 				}
 			}
 		}
 		return ret;	
 	}
-	
+
 	private List<Integer> getSimulationNumbersFromFile(String filename) {
 		List<Integer> simulationNumberList = new ArrayList<Integer>();
 		String line;
-			try {
-				FileReader fileReader = new FileReader(filename);
-				BufferedReader br = new BufferedReader(fileReader);
+		try {
+			FileReader fileReader = new FileReader(filename);
+			BufferedReader br = new BufferedReader(fileReader);
 
-				while ((line = br.readLine()) != null) {
-					String simulationNumberStr = line.split(",")[0].split("=")[1];
-					simulationNumberList.add(Integer.parseInt(simulationNumberStr));
-				}
-			} catch (IOException e) {
-				simulationNumberList = null;
+			while ((line = br.readLine()) != null) {
+				String simulationNumberStr = line.split(",")[0].split("=")[1];
+				simulationNumberList.add(Integer.parseInt(simulationNumberStr));
 			}
-			return simulationNumberList;
+		} catch (IOException e) {
+			simulationNumberList = null;
+		}
+		return simulationNumberList;
+	}
+
+	public int addResultsToResultsTable() {
+		int ret = 1, simulation_number = -1;
+		double duration = -1, initial_sir = -1, final_sir = -1, average_time = -1;
+		String line;
+		Statement stmt = null;
+		Connection conn = mServer.getConnection();
+		String lock = "LOCK TABLE results WRITE";
+		try {
+			conn.setAutoCommit(false);
+			stmt = conn.createStatement();
+			stmt.execute(lock);
+			System.out.println("Locking now....");
+
+			try {
+				FileReader fileReader = new FileReader(INFO.RESULTS_FILE);
+				BufferedReader br = new BufferedReader(fileReader);
+				while ((line = br.readLine()) != null) {
+					for(String param :  line.split(",")) {
+						String[] pair = param.split("=");
+						if("simulation_number".equals(pair[0])) {
+							simulation_number = Integer.parseInt(pair[1]);
+						} else if("duration".equals(pair[0])) {
+							duration = Double.parseDouble(pair[1]);
+						} else if("initial_sir".equals(pair[0])) {
+							initial_sir = Double.parseDouble(pair[1]);
+						} else if("sir_final".equals(pair[0])) {
+							final_sir = Double.parseDouble(pair[1]);
+						} else if("average_time".equals(pair[0])) {
+							average_time = Double.parseDouble(pair[1]);
+						} else {
+							System.out.println("Wrong parameter name: "+pair[0]);
+							return  RET_VALUES.GENERIC_ERROR;
+						}
+					}
+					if(simulation_number!=-1 && duration!=-1 && initial_sir!=-1 && final_sir!=-1 && average_time!=-1) {
+						System.out.println("Calling insertIntoResultsTable(...)");
+						insertIntoResultsTable(conn, simulation_number, duration, initial_sir, final_sir, average_time);
+					} else {
+						System.out.println("Add result: one of the parameters wasn't initialized!");
+						return RET_VALUES.GENERIC_ERROR;
+					}
+				}
+			} catch (FileNotFoundException e) {
+				System.out.println("File not found: "+INFO.RESULTS_FILE);
+				ret = RET_VALUES.FILE_NOT_FOUND_ERROR;
+			} catch (NumberFormatException e) {
+				System.out.println("Number Format Exception");
+				ret = RET_VALUES.GENERIC_ERROR;
+			} catch (IOException e) {
+				System.out.println("IO Exception");
+				ret = RET_VALUES.GENERIC_ERROR;
+			}
+			conn.commit();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			ret = RET_VALUES.GENERIC_ERROR;
+		} finally {
+			if (stmt != null) {
+				try {
+					stmt.execute("UNLOCK TABLES");
+					System.out.println("Table unlocked.");
+				} catch (SQLException e) {
+					e.printStackTrace();
+					ret = RET_VALUES.GENERIC_ERROR;
+				}
+			}
+		}
+		return ret;
+	}
+	
+	private int insertIntoResultsTable(Connection conn, int simulation_number, double duration, double initial_sir, double final_sir, double average_time) {
+		int ret;
+		try {
+			Statement st = conn.createStatement();
+			int count = st.executeUpdate("INSERT INTO results (simulation_number, wav_duration, initial_sir, final_sir, iteration_average_time) VALUES ("+simulation_number+", "+duration+", "+initial_sir+", "+final_sir+", "+average_time+")");
+			System.out.println("Insert into results simulation_number="+simulation_number+", duration="+duration+", initial_sir="+initial_sir+", final_sir="+final_sir+", average_time="+average_time);
+			System.out.println(count + " rows were inserted");
+			ret = RET_VALUES.SUCCESS;
+		} catch (SQLException e) {
+			System.out.println("SQL code does not execute.");
+			System.err.println("Error message: " + e.getMessage());
+			System.err.println("Error number: " + e.getErrorCode());
+			ret = RET_VALUES.GENERIC_ERROR;
+		}
+		return ret;
 	}
 }

@@ -4,7 +4,9 @@ public class Constants {
 	
 	public static class RET_VALUES {
 		public static final int SUCCESS = 0;
-		public static final int ERROR = -1;
+		public static final int GENERIC_ERROR = -1;
+		public static final int SERVER_IS_DOWN_ERROR = -2;
+		public static final int FILE_NOT_FOUND_ERROR = -3;
 	}
 	
 	public static class INFO {
@@ -18,6 +20,7 @@ public class Constants {
 		public static final String UPDATE_SIMULATION_INFO_FILE = "update_simulation_info.txt";
 		public static final String AVAILABLE_SIMULATIONS_FILE = "available_simulations.txt";
 		public static final String RETRIEVED_SIMULATIONS_FILE = "retrieved_simulations.txt";
+		public static final String RESULTS_FILE = "results.txt";
 
 		public static final double[] STEPSIZE = {0.002, 0.004, 0.006, 0.008, 0.01, 0.03};
 		public static final int[] N = {256, 256, 512, 512};
@@ -26,7 +29,7 @@ public class Constants {
 	}
 	
 	public static enum CMD {
-		UNKNOWN, POPULATE, UPDATE, SELECT, RAW, LOCK, TEST_CONN, RETRIEVE, UPDATE_STATUS, UPDATE_STATUS_OF_FILE;
+		UNKNOWN, POPULATE, UPDATE, SELECT, RAW, LOCK, TEST_CONN, RETRIEVE, UPDATE_STATUS, UPDATE_STATUS_OF_FILE, INSERT_NEW_FINISHED_SIMULATONS, ADD_RESULTS;
 		
 		public static String getCmds() {
 
